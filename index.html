@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html id="whole" lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>online HTML editor</title>
+    <link rel="preconnect" href="https://fonts.gstatic.com" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Ubuntu&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Balsamiq+Sans&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      * {
+        font-family: "Balsamiq Sans", cursive;
+      }
+
+      #whole {
+        background: #12232e;
+      }
+
+      .container {
+        margin: 0;
+        padding: 0;
+        display: inline-block;
+      }
+
+      #editor {
+        font-weight: bold;
+        resize: none;
+        position: fixed;
+        height: 83.5%;
+        width: 50%;
+        overflow: scroll;
+        color: white;
+        background: url(http://i.imgur.com/2cOaJ.png);
+        background-attachment: local;
+        background-repeat: no-repeat;
+        padding-left: 35px;
+        padding-top: 10px;
+        border-radius: 1em 0em 0em 1em;
+        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
+      }
+
+      #viewer {
+        border-radius: 0em 1em 1em 0em;
+        height: 85%;
+        width: 46%;
+        overflow: scroll;
+        margin-left: 52.7%;
+        position: fixed;
+        background-color: #ffffff;
+        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
+      }
+
+      #viewer:active {
+        border: 2px solid rgb(255, 0, 0);
+      }
+
+      .menu {
+        width: 90%;
+        height: auto;
+        border-radius: 1em;
+        overflow: hidden;
+        margin: auto;
+        box-shadow: 0 0 10px 1px rgba(0, 0, 0, 0.3);
+      }
+
+      .menu {
+        display: flex;
+        width: 100%;
+        height: 50px;
+      }
+
+      .menu button,
+      #color,
+      #font {
+        width: 25%;
+        border: currentColor;
+        background: #ffffff;
+        cursor: pointer;
+        font-weight: bold;
+        text-transform: uppercase;
+        color: #ff6600;
+        font-family: "Arial", sans-serif;
+        letter-spacing: 2px;
+        font-size: 13px;
+        outline: none;
+        transition-duration: 300ms;
+      }
+
+      #color {
+        height: auto;
+      }
+
+      .menu button:hover {
+        background: #ffbb00;
+        color: #0288d1;
+      }
+
+      [type="file"] {
+        border: 0;
+        clip: rect(0, 0, 0, 0);
+        height: 1px;
+        overflow: hidden;
+        padding: 0;
+        position: absolute !important;
+        white-space: nowrap;
+        width: 1px;
+      }
+
+      [type="file"] + label {
+        border: none;
+        color: #ffffff;
+        cursor: pointer;
+        font-weight: bold;
+        display: inline-block;
+        font-family: "Rubik", sans-serif;
+        outline: none;
+        font-size: 15px;
+        background: #ff6600;
+        padding: 1rem 50px;
+        position: relative;
+        vertical-align: middle;
+      }
+
+      [type="file"] + label:hover {
+        background: #ffbb00;
+        color: #0288d1;
+      }
+
+      .loader {
+        position: fixed;
+        top: 0;
+        left: 0;
+        background: lightgrey;
+        height: 100%;
+        width: 100%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+      }
+
+      .disppear {
+        animation: vanish 1s forwards;
+      }
+
+      @keyframes vanish {
+        100% {
+          opacity: 0;
+          visibility: hidden;
+        }
+      }
+    </style>
+  </head>
+
+  <body id="bg" onload="javascript:eraseText();">
+    <div class="loader">
+      <img src="https://i.imgur.com/IHK6uSD.gif" alt="not available" />
+    </div>
+    <div class="menu">
+      <input class="buttons" type="file" id="file" />
+      <label for="file" class="buttons">Open</label>
+      <button class="buttons" type="button" onclick="refresh()">
+        <i class="fas fa-play"></i>Run
+      </button>
+      <button id="save" type="button" onclick="download()">
+        <i class="fas fa-save"></i>Save
+      </button>
+      <button class="buttons" type="button" onclick="copy()">
+        <i class="fas fa-copy"></i>Copy
+      </button>
+      <button class="buttons" type="button" onclick="eraseText()">
+        <i class="fas fa-trash"></i>Reset
+      </button>
+      <button class="buttons" type="button" onclick="openchat()">
+        <i class="fas fa-trash"></i>chat
+      </button>
+
+      <select id="font" onchange="myFunction(this);">
+        <option>Normal</option>
+        <option>Italic</option>
+        <option>Oblique</option>
+      </select>
+      <input id="color" type="color" value="#FF6400" />
+      <button class="buttons" type="button" onclick="colorchange()">
+        <i class="fas fa-exchange-alt"></i>Change
+      </button>
+    </div>
+    <div class="container">
+      <textarea
+        id="editor"
+        rows="50"
+        cols="50"
+        placeholder="&lt;!--write your webpage code here--&gt; 
+
+/*wite your internal css in &lt;style&gt; tag */
+
+//write your internal javascript in &lt;script&gt; tag"
+        value="Clear"
+        spellcheck="false"
+      ></textarea>
+      <iframe id="viewer"></iframe>
+    </div>
+
+    <script>
+      var Bcolor;
+      var textcontent;
+
+      var loader = document.querySelector(".loader");
+      window.addEventListener("load", vanish);
+      function vanish() {
+        loader.classList.add("disppear");
+      }
+
+      let input = document.querySelector("input");
+      let textarea = document.querySelector("textarea");
+
+      input.addEventListener("change", () => {
+        let files = input.files;
+
+        if (files.length == 0) return;
+
+        const file = files[0];
+
+        let reader = new FileReader();
+
+        reader.onload = (e) => {
+          const file = e.target.result;
+          const lines = file.split(/\r\n|\n/);
+          textarea.value = lines.join("\n");
+        };
+
+        reader.onerror = (e) => alert(e.target.error.name);
+
+        reader.readAsText(file);
+      });
+
+      function refresh() {
+        textcontent = document.getElementById("editor").value;
+        document.getElementById("viewer").srcdoc = textcontent;
+      }
+
+      window.addEventListener("beforeunload", function (e) {
+        e.preventDefault();
+        e.returnValue = "";
+      });
+
+      function download() {
+        var text = document.getElementById("editor").value;
+        text = text.replace(/\n/g, "\r\n");
+        var blob = new Blob([text], { type: "text/plain" });
+        var anchor = document.createElement("a");
+        anchor.download = "file.html";
+        anchor.href = window.URL.createObjectURL(blob);
+        anchor.target = "_blank";
+        anchor.style.display = "none";
+        document.body.appendChild(anchor);
+        anchor.click();
+        document.body.removeChild(anchor);
+      }
+
+      function copy() {
+        let textarea = document.getElementById("editor");
+        textarea.select();
+        document.execCommand("copy");
+      }
+
+      function myFunction(selectTag) {
+        var listValue = selectTag.options[selectTag.selectedIndex].text;
+        document.getElementById("editor").style.fontStyle = listValue;
+      }
+
+      function eraseText() {
+        document.getElementById("editor").value = "";
+      }
+
+      function colorchange() {
+        Bcolor = document.getElementById("color").value;
+        document.getElementById("whole").style.backgroundColor = Bcolor;
+
+        if (Bcolor == "#ffffff") {
+          document.getElementById("editor").style.color = "black";
+          document.getElementById("editor").style.border = "2px solid white";
+        } else {
+          document.getElementById("editor").style.color = "white";
+          document.getElementById("editor").style.border = "2px solid black";
+        }
+      }
+      function openchat() {
+        window.open(
+          "https://filemanagementsystem1.azurewebsites.net/chat.html",
+          " ",
+          "width=450,height=600"
+        );
+      }
+    </script>
+  </body>
+</html>
